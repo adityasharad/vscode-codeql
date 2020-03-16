@@ -321,6 +321,12 @@ export class CodeQLCliServer implements Disposable {
     return await this.runJsonCodeQlCliCommand<string[]>(['resolve', 'ram'], args, "Resolving RAM settings", progressReporter);
   }
 
+  async queryDecompile(qloPath: string): Promise<string> {
+    const outputPath = qloPath + '.dil';
+    await this.runCodeQlCliCommand(['query', 'decompile'], ['--output', outputPath, qloPath], 'Reading DIL');
+    return outputPath;
+  }
+
 
   async interpretBqrs(metadata: { kind: string, id: string }, resultsPath: string, interpretedResultsPath: string, sourceInfo?: SourceInfo): Promise<sarif.Log> {
     const args = [

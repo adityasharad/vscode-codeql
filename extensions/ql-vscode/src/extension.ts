@@ -254,6 +254,7 @@ async function activateWithInstalledDistribution(ctx: ExtensionContext, distribu
   const queryHistoryConfigurationListener = new QueryHistoryConfigListener();
   const qhm = new QueryHistoryManager(
     ctx,
+    cliServer,
     queryHistoryConfigurationListener,
     async item => showResultsForCompletedQuery(item, WebviewReveal.Forced)
   );

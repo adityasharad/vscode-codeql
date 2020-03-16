@@ -4,7 +4,7 @@ import { ExtensionContext, window as Window } from 'vscode';
 import { CompletedQuery } from './query-results';
 import { QueryHistoryConfig } from './config';
 import { QueryWithResults } from './run-queries';
-
+import { CodeQLCliServer } from './cli';
 /**
  * query-history.ts
  * ------------
@@ -151,6 +151,14 @@ export class QueryHistoryManager {
     }
   }
 
+  // TODO this should live on QueryInfo, and avoid re-creating the DIL when we've already decompiled it.
+  async handleViewDil(queryHistoryItem: CompletedQuery, cliServer: CodeQLCliServer) {
+    const qloFile = queryHistoryItem.query.compiledQueryPath;
+    const dilFile = await cliServer.queryDecompile(qloFile);
+    const textDocument = await vscode.workspace.openTextDocument(dilFile);
+    await vscode.window.showTextDocument(textDocument, vscode.ViewColumn.One);
+  }
+
   async handleSetLabel(queryHistoryItem: CompletedQuery) {
     const response = await vscode.window.showInputBox({
       prompt: 'Label:',
@@ -189,6 +197,7 @@ export class QueryHistoryManager {
 
   constructor(
     ctx: ExtensionContext,
+    cliServer: CodeQLCliServer,
     private queryHistoryConfigListener: QueryHistoryConfig,
     selectedCallback?: (item: CompletedQuery) => Promise<void>
   ) {
@@ -211,6 +220,7 @@ export class QueryHistoryManager {
     ctx.subscriptions.push(vscode.commands.registerCommand('codeQLQueryHistory.itemClicked', async (item) => {
       return this.handleItemClicked(item);
     }));
+    ctx.subscriptions.push(vscode.commands.registerCommand('codeQLQueryHistory.viewDil', async (item) => this.handleViewDil(item, cliServer)));
     queryHistoryConfigListener.onDidChangeQueryHistoryConfiguration(() => {
       this.treeDataProvider.refresh();
     });
